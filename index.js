@@ -10,6 +10,7 @@ const io = new Server(httpServer, {
     // methods: ["GET", "POST"],
 })
 
+const port = process.env.PORT || 8000;
 
 httpServer.listen(port, () => {
     console.log("Video chat is running on port 8000");
@@ -21,13 +22,21 @@ app.use(cors());
 app.use(express.json());
 
 
-io.on("connection", (socket) =>{
+io.on("connection", (socket) => {
     socket.emit("me", socket.id)
 
+    // to call
+    socket.on('callUser', (data) => {
+        io.to(data.userToCall).emit('callUser', { signal: data.signalData, from: data.from, name: data.name })
+    })
 
+    //  to answer call
+    socket.io("answerCall", (data) => {
+        io.to(data.to).emit("callAccepted", data.signal)
+    })
 
     // disconnect
-    socket.on("disconnect", ()=>{
+    socket.on("disconnect", () => {
         socket.broadcast.emit("callEnded")
     })
 })
